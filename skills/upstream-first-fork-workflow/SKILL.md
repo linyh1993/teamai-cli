@@ -1,65 +1,60 @@
 ---
 name: upstream-first-fork-workflow
-description: Manage a fast-moving upstream fork with local bug fixes or features. Use when comparing, rebasing, syncing, or retiring fork-only changes.
+description: 管理快速演进的上游 fork：处理本地修复或功能、同步上游、删除已被上游覆盖的改动。适用于分支、rebase、差异归类与同步。
 ---
 
-# Upstream-First Fork Workflow
+# 上游优先 Fork 工作流
 
-`upstream/main` is authoritative for behavior shared with the original project.
-Use a worktree and follow the repository's `AGENTS.md`.
+共享行为以 `upstream/main` 为准。必须在 worktree 中工作，并遵循仓库的
+`AGENTS.md`。
 
-## Branch Roles
+## 远程与分支
 
-- `upstream/main`: the original project. Never modify it.
-- `origin/main`: a clean mirror branch. Update it only with upstream-only history.
-- `origin/<feature>`: fork-only bug fixes and features. Rebase it onto `upstream/main`.
+- `upstream/main`：腾讯原项目，只读。
+- `origin/main`：fork 的纯上游镜像，只接收上游历史。
+- `origin/<feature>`：fork 独有的 bug 修复或功能，rebase 到 `upstream/main`。
 
-Do not mix fork-only commits into the mirror branch. Do not merge upstream into a
-feature branch when rebase can preserve a linear history.
+绝不向 `upstream` 推送。每次推送前都确认目标为 `origin`；若 `upstream` 的
+push URL 未配置为 `DISABLED`，先停止并修正配置。不要把 fork 独有提交混入镜像
+分支；可 rebase 时不要 merge 上游。
 
-## Before Changing Code
+## 改动前
 
-1. Fetch both remotes and record the target upstream commit.
-2. Review the local diff and the upstream changes for the same bug report or
-   requirement. Compare observable behavior and relevant tests, not filenames
-   or commit messages alone.
-3. Work in a branch worktree. Keep unrelated local edits untouched.
+1. 分别执行 `git fetch origin` 和 `git fetch upstream`，记录目标上游提交。
+2. 对照本地 diff 与上游改动是否解决同一个 bug 或需求。比较可观察行为和相关测试，
+   不以文件名或提交标题作为结论。
+3. 在分支 worktree 中工作，不触碰无关的本地编辑。
 
-## Upstream Wins
+## 上游覆盖
 
-When upstream fully solves the same problem:
+当上游完整解决同一个问题时：
 
-1. Keep upstream's implementation and tests.
-2. Delete the overlapping fork-only code, tests, docs, and configuration.
-3. Drop the duplicate local commit during rebase, or amend it so it contains
-   only behavior that upstream does not provide.
+1. 保留上游实现和测试。
+2. 删除重叠的 fork 代码、测试、文档和配置。
+3. rebase 时丢弃重复提交，或 amend 为只包含上游未提供的行为。
 
-Do not keep duplicate fallbacks, alternate implementations, or compatibility
-switches merely because they were previously developed in the fork.
+不要因为 fork 中已经开发过，就保留重复的 fallback、替代实现或兼容开关。
 
-## Fork Delta
+## Fork 差异
 
-Keep a fork-only change only when upstream does not solve the requirement, or
-when a verified, user-visible gap remains. State that gap in the commit message
-and add the smallest targeted test.
+仅在上游未解决需求，或验证后仍有用户可见缺口时保留 fork 改动。在提交信息中写明
+该缺口，并添加最小的定向测试。
 
-If upstream partially overlaps, reduce the local change to the uncovered
-behavior before committing. Re-check the resulting diff against `upstream/main`.
+上游部分覆盖时，提交前将本地改动缩小到未覆盖行为；再与 `upstream/main` 比对。
 
-## Sync Procedure
+## 同步
 
-For a feature branch:
+功能分支：
 
 ```powershell
-git fetch origin upstream
+git fetch origin
+git fetch upstream
 git rebase upstream/main
 git diff upstream/main...HEAD
 git push --force-with-lease origin <feature-branch>
 ```
 
-For a pure upstream mirror branch, push only the upstream commit range. Never
-force-push a shared branch unless its owners have agreed to that history change.
+纯上游镜像分支只推送上游提交范围。未经分支所有者同意，不要强推共享分支。
 
-After syncing, report the upstream commit, the fork branch, retained fork-only
-files, and discarded overlapping files. Verify the branch has no uncommitted
-changes and run focused checks for the retained delta.
+同步后报告上游提交、fork 分支、保留的 fork 文件和已删除的重叠文件。确认分支没有
+未提交改动，并为保留的差异执行定向验证。
