@@ -8,7 +8,7 @@ TypeScript, Node 20+, tsup (ESM), Vitest. Commands: `npm run build`, `npx tsc --
 
 - Default branch: `main`. Worktrees and PRs based on `origin/main`.
 - PR only to `Tencent/teamai-cli`. Before push, check `git log origin/main..HEAD`; rebase or cherry-pick if unrelated commits appear.
-- **必须使用 Worktree**：改代码前先 `EnterWorktree`，禁止在主工作目录修改。
+- 默认在当前项目目录工作。仅在用户要求隔离、并行开发或改动风险较高时使用 Worktree。
 
 ## Rules
 
