@@ -221,7 +221,12 @@ export async function enrichWithAI(ctx: EnrichContext): Promise<EnrichResult | n
     const results = await callClaudeParallel(tasks, 3);
     moduleResults = results.filter((r): r is { name: string; result: ModuleAIResult } => r !== null);
   } catch (e) {
-    log.warn(`enrichWithAI: module analysis failed (non-blocking): ${(e as Error).message}`);
+    const agg = e as AggregateError;
+    const detail = agg?.errors?.length
+      ? agg.errors.map((x, i) => `[${i}] ${(x instanceof Error ? x.message : String(x)).slice(0, 400)}`).join(' | ')
+      : (e as Error).message;
+    log.warn(`enrichWithAI: module analysis failed (non-blocking): ${detail}`);
+    console.error('AI enrich failure detail:', detail.slice(0, 2000));
     return null;
   }
 
